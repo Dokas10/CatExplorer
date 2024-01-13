@@ -139,12 +139,12 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\andre\.gradle\cach
 		ADDED from C:\Users\andre\Desktop\CatExplorer\app\src\main\AndroidManifest.xml:12:9-49
 	android:dataExtractionRules
 		ADDED from C:\Users\andre\Desktop\CatExplorer\app\src\main\AndroidManifest.xml:7:9-65
-activity#com.catexplorer.MainActivity
+activity#com.catexplorer.view.CatBreedMainActivity
 ADDED from C:\Users\andre\Desktop\CatExplorer\app\src\main\AndroidManifest.xml:14:9-22:20
 	android:exported
 		ADDED from C:\Users\andre\Desktop\CatExplorer\app\src\main\AndroidManifest.xml:16:13-36
 	android:name
-		ADDED from C:\Users\andre\Desktop\CatExplorer\app\src\main\AndroidManifest.xml:15:13-41
+		ADDED from C:\Users\andre\Desktop\CatExplorer\app\src\main\AndroidManifest.xml:15:13-54
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
 ADDED from C:\Users\andre\Desktop\CatExplorer\app\src\main\AndroidManifest.xml:17:13-21:29
 action#android.intent.action.MAIN

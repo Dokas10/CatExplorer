@@ -27,7 +27,7 @@
         android:testOnly="true"
         android:theme="@style/Theme.CatExplorer" >
         <activity
-            android:name="com.catexplorer.MainActivity"
+            android:name="com.catexplorer.view.CatBreedMainActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
