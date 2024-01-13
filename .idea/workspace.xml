@@ -9,10 +9,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cb28f31b-f3f2-4c91-ae6c-9814af1c04f5" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-    </list>
+    <list default="true" id="cb28f31b-f3f2-4c91-ae6c-9814af1c04f5" name="Changes" comment="Retrofit and Jetpack Compose dependencies. Also files generated from first execution" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -119,6 +116,14 @@
       <option name="presentableId" value="Default" />
       <updated>1705172622180</updated>
     </task>
+    <task id="LOCAL-00001" summary="Retrofit and Jetpack Compose dependencies. Also files generated from first execution">
+      <created>1705174289843</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1705174289843</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -131,5 +136,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Retrofit and Jetpack Compose dependencies. Also files generated from first execution" />
+    <option name="LAST_COMMIT_MESSAGE" value="Retrofit and Jetpack Compose dependencies. Also files generated from first execution" />
   </component>
 </project>
