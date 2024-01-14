@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.catexplorer.app-mergeDebugResources-62:/values-v23/values-v23.xml",
+            "outputFile": "com.catexplorer.app-mergeDebugResources-63:/values-v23/values-v23.xml",
             "map": [
                 {
                     "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-3\\319e2b147b79591bf905df68457775c9\\transformed\\cardview-1.0.0\\res\\values-v23\\values-v23.xml",

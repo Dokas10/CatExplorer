@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.catexplorer.app-mergeDebugResources-62:/values-hi/values-hi.xml",
+            "outputFile": "com.catexplorer.app-mergeDebugResources-63:/values-hi/values-hi.xml",
             "map": [
                 {
                     "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-3\\c9f9b4f81ac2ee72a8382db33f4c2c7b\\transformed\\material3-1.1.2\\res\\values-hi\\values-hi.xml",
