@@ -122,7 +122,6 @@
 /app/build/intermediates/project_dex_archive/debug/out/com/catexplorer/view/CatBreedListFragment$observeViewModel$2$1$1$1.dex
 /app/build/tmp/kotlin-classes/debug/com/catexplorer/view/CatBreedListFragment.class
 /app/build/intermediates/project_dex_archive/debug/out/com/catexplorer/view/CatBreedListFragment.dex
-/app/build/intermediates/dex/debug/mergeProjectDexDebug/5/classes.dex
 /app/build/intermediates/data_binding_base_class_log_artifact/debug/out/com.catexplorer-binding_classes.json
 /app/build/tmp/kotlin-classes/debug/com/catexplorer/view/ComposableSingletons$CatBreedListFragmentKt$lambda-1$1.class
 /app/build/intermediates/project_dex_archive/debug/out/com/catexplorer/view/ComposableSingletons$CatBreedListFragmentKt$lambda-1$1.dex
@@ -162,8 +161,6 @@
 /app/build/intermediates/javac/debug/classes/com/catexplorer/databinding/FragmentCatBreedListBinding.class
 /app/build/intermediates/project_dex_archive/debug/out/com/catexplorer/databinding/FragmentCatBreedListBinding.dex
 /app/build/generated/data_binding_base_class_source_out/debug/out/com/catexplorer/databinding/FragmentCatBreedListBinding.java
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/j+9VRxMFn7r_beJGe_l8Aew7Afo=
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/jXg2+aGifj+BMLale9wVCuFFGYE=
 /app/build/intermediates/merged_res_blame_folder/debug/out/single/layout.json
 /app/build/intermediates/merged_res/debug/layout_fragment_breed_favorites.xml.flat
 /app/build/intermediates/merged_res/debug/layout_fragment_cat_breed_details.xml.flat
@@ -181,14 +178,6 @@
 /.idea/navEditor.xml
 /app/build/intermediates/packaged_res/debug/menu/navigation_menu.xml
 /app/build/intermediates/merged_res/debug/navigation_nav_main.xml.flat
-/app/build/outputs/apk/debug/output-metadata.json
-/.idea/inspectionProfiles/Project_Default.xml
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/qKoK+dXwo+Mt5U5I0gx8NwQjCSI=
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/qvbYVQIfEorJ+x4zmtSP87zR+Rg=
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/roJg_WGn56ZtyBRFaBir0iCRA4Q=
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/T0kan3kvyKAUDB6xaDY4DzNwf1U=
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/TjlFCIr6Bjy6tVB_dHZ7lSRxrDU=
-/app/build/intermediates/incremental/debug-mergeJavaRes/zip-cache/umoHAlPpNLa7Ujoi6QRk1An4p+k=
 /app/build/intermediates/incremental/debug/mergeDebugResources/merged.dir/values/values.xml
 /app/build/intermediates/incremental/debug/packageDebugResources/merged.dir/values/values.xml
 /app/build/intermediates/incremental/debug/mergeDebugResources/merged.dir/values-af/values-af.xml
