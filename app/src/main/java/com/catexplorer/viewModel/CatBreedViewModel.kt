@@ -10,11 +10,10 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class CatBreedViewModel : ViewModel() {
+class CatBreedViewModel() : ViewModel() {
 
     private var catListLiveData = MutableLiveData<ArrayList<CatMainInfo>>()
     private var catBreedInfoLiveData = MutableLiveData<CatMainInfo>()
-
     fun getCatList(limit : Int, has_breeds: Int) {
         RetrofitClientInstance.apiService.getCatBreedList(limit, has_breeds).enqueue(object  : Callback<ArrayList<CatMainInfo>> {
             override fun onResponse(call: Call<ArrayList<CatMainInfo>>, response: Response<ArrayList<CatMainInfo>>) {
