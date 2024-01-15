@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_main"
+    app:startDestination="@id/catBreedListFragment">
+
+    <fragment
+        android:id="@+id/catBreedListFragment"
+        android:name="com.catexplorer.view.CatBreedListFragment"
+        android:label="fragment_cat_breed_list"
+        tools:layout="@layout/fragment_cat_breed_list" >
+        <action
+            android:id="@+id/action_catBreedListFragment_to_catBreedDetailsFragment"
+            app:destination="@id/catBreedDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/catBreedDetailsFragment"
+        android:name="com.catexplorer.view.CatBreedDetailsFragment"
+        android:label="fragment_cat_breed_details"
+        tools:layout="@layout/fragment_cat_breed_details" >
+        <action
+            android:id="@+id/action_catBreedDetailsFragment_to_catBreedListFragment"
+            app:destination="@id/catBreedListFragment" />
+        <action
+            android:id="@+id/action_catBreedDetailsFragment_to_breedFavoritesFragment2"
+            app:destination="@id/breedFavoritesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/breedFavoritesFragment"
+        android:name="com.catexplorer.view.BreedFavoritesFragment"
+        android:label="fragment_breed_favorites"
+        tools:layout="@layout/fragment_breed_favorites" >
+        <action
+            android:id="@+id/action_breedFavoritesFragment2_to_catBreedDetailsFragment"
+            app:destination="@id/catBreedDetailsFragment" />
+    </fragment>
+</navigation>

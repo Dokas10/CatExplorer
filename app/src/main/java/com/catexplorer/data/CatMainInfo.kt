@@ -1,6 +1,7 @@
 package com.catexplorer.data
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 data class CatMainInfo(
     @SerializedName("id")
@@ -13,4 +14,4 @@ data class CatMainInfo(
     var height: Int,
     @SerializedName("breeds")
     var catBreedInfo: List<CatBreedInfo>?
-)
+): Serializable
