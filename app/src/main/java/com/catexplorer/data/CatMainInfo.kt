@@ -13,5 +13,6 @@ data class CatMainInfo(
     @SerializedName("height")
     var height: Int,
     @SerializedName("breeds")
-    var catBreedInfo: List<CatBreedInfo>?
+    var catBreedInfo: List<CatBreedInfo>?,
+    var favorite: Boolean = false
 ): Serializable

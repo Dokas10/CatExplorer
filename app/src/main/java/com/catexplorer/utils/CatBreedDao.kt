@@ -10,6 +10,6 @@ import com.catexplorer.data.CatInfoTable
 interface CatBreedDao {
     @Upsert
     suspend fun insertBreed(breed: CatInfoTable)
-    //@Query("SELECT * FROM CatInfoTable")
-    //suspend fun getCatBreeds(): LiveData<ArrayList<CatInfoTable>>
+    @Query("SELECT * FROM CatInfoTable WHERE isFavorite=1")
+    suspend fun getFavoriteBreeds(): List<CatInfoTable>
 }

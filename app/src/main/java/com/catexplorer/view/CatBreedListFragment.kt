@@ -8,28 +8,31 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import coil.compose.AsyncImage
 import com.catexplorer.R
 import com.catexplorer.data.CatBreedInfo
 import com.catexplorer.data.CatInfoTable
 import com.catexplorer.data.CatMainInfo
 import com.catexplorer.databinding.FragmentCatBreedListBinding
-import com.catexplorer.utils.CatBreedDao
 import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.viewModel.CatBreedViewModel
 import kotlinx.coroutines.launch
@@ -54,7 +57,7 @@ class CatBreedListFragment : Fragment() {
         super.onCreate(savedInstanceState)
         db = Room.databaseBuilder(
             context!!,
-            CatBreedDatabase::class.java, "database-name"
+            CatBreedDatabase::class.java, "CatInfoDatabase"
         ).build()
     }
     override fun onCreateView(
@@ -83,7 +86,7 @@ class CatBreedListFragment : Fragment() {
                 }
             }
         }else {
-            viewModel = ViewModelProvider(this)[CatBreedViewModel::class.java]
+            viewModel = ViewModelProvider(requireActivity())[CatBreedViewModel::class.java]
             viewModel.getCatList(breedNumberReturned, hasBreeds)
             viewModel.getAllBreeds()
             viewModel.observeCatListLiveData().observe(viewLifecycleOwner, Observer { list ->
@@ -123,48 +126,114 @@ class CatBreedListFragment : Fragment() {
     }
 
     @Composable
-    fun BreedsScreen(){
+    fun BreedsScreen() {
         var list by remember { mutableStateOf<ArrayList<CatMainInfo>?>(null) }
+        var hasResults by remember { mutableStateOf<Boolean>(true) }
         list = listBreed
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            SearchBarField(onListChanged = {
-                list = it
+            SearchBarField(onListChanged = { searchList, searchNoResults ->
+                if(!searchList.isNullOrEmpty()) {
+                    listBreed = searchList
+                    list = searchList
+                }
+                hasResults = searchNoResults
             })
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(3),
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp)
-            ){
-                when(list) {
-                    null -> {}
-                    else -> items(list!!) { item ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.clickable {
-                                val bundle = Bundle()
-                                bundle.putSerializable("BreedInfo", item)
-                                findNavController().navigate(R.id.action_catBreedListFragment_to_catBreedDetailsFragment, bundle)
+            if(hasResults) {
+                LazyVerticalStaggeredGrid(
+                    columns = StaggeredGridCells.Fixed(3),
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    when (list) {
+                        null -> {}
+                        else -> itemsIndexed(list!!) { index, item ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.clickable {
+                                    viewModel.setCatInformation(listBreed!!)
+                                    var bundle = Bundle()
+                                    bundle.putInt("Position", index)
+                                    findNavController().navigate(
+                                        R.id.action_catBreedListFragment_to_catBreedDetailsFragment,
+                                        bundle
+                                    )
+                                }
+                            ) {
+                                Box(contentAlignment = Alignment.TopEnd) {
 
+                                    AsyncImage(
+                                        model = item.url,
+                                        contentDescription = null
+                                    )
+
+                                    FavoriteButton(
+                                        modifier = Modifier.padding(12.dp),
+                                        position = index
+                                    )
+
+                                }
+                                Text(
+                                    text = item.catBreedInfo!![0].name!!,
+                                )
                             }
-                        ) {
-                            AsyncImage(
-                                model = item.url,
-                                contentDescription = null
-                            )
-                            Text(
-                                text = item.catBreedInfo!![0].name!!,
-                            )
                         }
                     }
+                }
+            }else{
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = "No results found!", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
-    
+
+    @Composable
+    fun FavoriteButton(
+        modifier: Modifier = Modifier,
+        color: Color = Color.Gray,
+        position: Int
+    ) {
+
+        var isFavorite by remember { mutableStateOf(listBreed!![position].favorite) }
+
+        IconToggleButton(
+            checked = isFavorite,
+            onCheckedChange = {
+                isFavorite = !isFavorite
+                listBreed!![position].favorite = isFavorite
+                lifecycleScope.launch {
+                    val breed = CatInfoTable(
+                        listBreed!![position].id,
+                        listBreed!![position].url,
+                        listBreed!![position].width,
+                        listBreed!![position].height,
+                        listBreed!![position].catBreedInfo!![0].life_span!!,
+                        listBreed!![position].catBreedInfo!![0].name!!,
+                        listBreed!![position].catBreedInfo!![0].origin!!,
+                        listBreed!![position].catBreedInfo!![0].temperament!!,
+                        listBreed!![position].catBreedInfo!![0].description!!,
+                        listBreed!![position].favorite
+                    )
+                    db.dao.insertBreed(breed)
+                }
+            }
+        ) {
+            Icon(
+                tint = color,
+                imageVector = if (isFavorite) {
+                    Icons.Filled.Favorite
+                } else {
+                    Icons.Default.FavoriteBorder
+                },
+                contentDescription = null
+            )
+        }
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun SearchBarField(onListChanged: (ArrayList<CatMainInfo>?) -> Unit){
+    fun SearchBarField(onListChanged: (ArrayList<CatMainInfo>?, Boolean) -> Unit){
         var text by remember { mutableStateOf("") }
         var active by remember { mutableStateOf(false) }
         var filteredList by remember { mutableStateOf<ArrayList<CatMainInfo>?>(null) }
@@ -175,7 +244,7 @@ class CatBreedListFragment : Fragment() {
                 text = it
             },
             onSearch ={
-                var breedId : String = ""
+                var breedId = ""
                 for(i in listBreedInfo){
                     if(i.name!!.contains(text)){
                         breedId = if(breedId.isEmpty()){
@@ -189,9 +258,13 @@ class CatBreedListFragment : Fragment() {
                     viewModel.getImagesByBreed(breedNumberReturned, breedId)
                     viewModel.observeCatImagesByBreedLiveData().observe(this, Observer {
                         filteredList = it
-                        onListChanged(filteredList)
+                        onListChanged(filteredList, true)
                         active = false
                     })
+                }else{
+                    filteredList = ArrayList()
+                    onListChanged(filteredList, false)
+                    active = false
                 }
             },
             active = active,
