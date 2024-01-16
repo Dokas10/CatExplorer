@@ -244,7 +244,7 @@ class CatBreedListFragment : Fragment() {
                 text = it
             },
             onSearch ={
-                var breedId : String = ""
+                var breedId = ""
                 for(i in listBreedInfo){
                     if(i.name!!.contains(text)){
                         breedId = if(breedId.isEmpty()){
