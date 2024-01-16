@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,12 +87,13 @@ class BreedFavoritesFragment : Fragment() {
                                     contentDescription = null
                                 )
 
-                                FavoriteButton(modifier = Modifier.padding(12.dp))
+                                FavoriteButton(modifier = Modifier.padding(12.dp), catInfo = item)
 
                             }
                             Text(
                                 text = item.name,
                             )
+                            Text(text = item.lifespan + "years")
                         }
                     }
                 }
@@ -104,15 +104,31 @@ class BreedFavoritesFragment : Fragment() {
     @Composable
     fun FavoriteButton(
         modifier: Modifier = Modifier,
-        color: Color = Color.Red,
+        color: Color = Color.Gray,
+        catInfo: CatInfoTable
     ) {
 
-        var isFavorite by remember { mutableStateOf(true) }
+        var isFavorite by remember { mutableStateOf(catInfo.isFavorite) }
 
         IconToggleButton(
             checked = isFavorite,
             onCheckedChange = {
                 isFavorite = !isFavorite
+                lifecycleScope.launch {
+                    val breed = CatInfoTable(
+                        catInfo.id,
+                        catInfo.url,
+                        catInfo.width,
+                        catInfo.height,
+                        catInfo.lifespan,
+                        catInfo.name,
+                        catInfo.origin,
+                        catInfo.temperament,
+                        catInfo.description,
+                        isFavorite
+                    )
+                    db.dao.insertBreed(breed)
+                }
             }
         ) {
             Icon(

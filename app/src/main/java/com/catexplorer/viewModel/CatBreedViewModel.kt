@@ -17,6 +17,8 @@ class CatBreedViewModel : ViewModel() {
     private var catBreedInfoLiveData = MutableLiveData<CatMainInfo>()
     private var catBreedsLiveData = MutableLiveData<ArrayList<CatBreedInfo>>()
     private var catImagesByBreed = MutableLiveData<ArrayList<CatMainInfo>>()
+
+    private var catInformation = MutableLiveData<ArrayList<CatMainInfo>>()
     fun getCatList(limit : Int, has_breeds: Int) {
         RetrofitClientInstance.apiService.getCatBreedList(limit, has_breeds).enqueue(object  : Callback<ArrayList<CatMainInfo>> {
             override fun onResponse(call: Call<ArrayList<CatMainInfo>>, response: Response<ArrayList<CatMainInfo>>) {
@@ -90,6 +92,14 @@ class CatBreedViewModel : ViewModel() {
     }
     fun observeCatImagesByBreedLiveData() : LiveData<ArrayList<CatMainInfo>> {
         return catImagesByBreed
+    }
+
+    fun setCatInformation(info : ArrayList<CatMainInfo>){
+        this.catInformation.value = info
+    }
+
+    fun getCatInformation() : LiveData<ArrayList<CatMainInfo>>{
+        return catInformation
     }
 
 }
