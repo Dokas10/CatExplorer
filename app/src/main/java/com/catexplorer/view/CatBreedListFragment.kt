@@ -132,7 +132,7 @@ class CatBreedListFragment : Fragment() {
         list = listBreed
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             SearchBarField(onListChanged = { searchList, searchNoResults ->
-                if(list.isNullOrEmpty()) {
+                if(!searchList.isNullOrEmpty()) {
                     listBreed = searchList
                     list = searchList
                 }
@@ -258,11 +258,12 @@ class CatBreedListFragment : Fragment() {
                     viewModel.getImagesByBreed(breedNumberReturned, breedId)
                     viewModel.observeCatImagesByBreedLiveData().observe(this, Observer {
                         filteredList = it
-                        onListChanged(it, true)
+                        onListChanged(filteredList, true)
                         active = false
                     })
                 }else{
-                    onListChanged(null, false)
+                    filteredList = ArrayList()
+                    onListChanged(filteredList, false)
                     active = false
                 }
             },
