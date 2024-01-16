@@ -11,7 +11,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class CatBreedViewModel() : ViewModel() {
+class CatBreedViewModel : ViewModel() {
 
     private var catListLiveData = MutableLiveData<ArrayList<CatMainInfo>>()
     private var catBreedInfoLiveData = MutableLiveData<CatMainInfo>()
