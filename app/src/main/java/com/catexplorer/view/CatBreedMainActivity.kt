@@ -35,6 +35,7 @@ class CatBreedMainActivity : AppCompatActivity() {
         drawerLayout = findViewById(R.id.my_drawer_layout)
         binding.navigationView.setupWithNavController(navController)
 
+        //Mark both Favorites fragment and list fragment as top level fragments in the navigation drawer
         val topLevel = HashSet<Int>()
         topLevel.add(R.id.breedFavoritesFragment)
         topLevel.add(R.id.catBreedListFragment)
@@ -49,6 +50,7 @@ class CatBreedMainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
+    //Function to check device internet connection
     fun checkInternetConnection() : Boolean{
         return networkUtils.isNetworkAvailable()
     }

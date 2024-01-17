@@ -12,6 +12,7 @@ import com.catexplorer.data.CatMainInfo
 import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.utils.RetrofitClientInstance
 import kotlinx.coroutines.launch
+import okhttp3.internal.toImmutableList
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -37,7 +38,7 @@ class CatBreedViewModel : ViewModel() {
                 }
             }
             override fun onFailure(call: Call<ArrayList<CatMainInfo>>, t: Throwable) {
-                Log.d("TAG",t.message.toString())
+                Log.d(TAG,t.message.toString())
             }
         })
     }
@@ -52,7 +53,7 @@ class CatBreedViewModel : ViewModel() {
                 }
             }
             override fun onFailure(call: Call<CatMainInfo>, t: Throwable) {
-                Log.d("TAG",t.message.toString())
+                Log.d(TAG,t.message.toString())
             }
         })
     }
@@ -67,7 +68,7 @@ class CatBreedViewModel : ViewModel() {
             }
 
             override fun onFailure(call: Call<ArrayList<CatBreedInfo>>, t: Throwable) {
-                Log.d("TAG",t.message.toString())
+                Log.d(TAG,t.message.toString())
             }
 
         })
@@ -83,7 +84,8 @@ class CatBreedViewModel : ViewModel() {
             }
 
             override fun onFailure(call: Call<ArrayList<CatMainInfo>>, t: Throwable) {
-                Log.d("TAG",t.message.toString())            }
+                Log.d(TAG, t.message.toString())
+            }
         })
     }
 
@@ -131,4 +133,7 @@ class CatBreedViewModel : ViewModel() {
         }
     }
 
+    companion object{
+        private const val TAG = "TAG"
+    }
 }

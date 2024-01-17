@@ -4,11 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
@@ -43,8 +44,7 @@ import kotlinx.coroutines.launch
  */
 class CatBreedListFragment : Fragment() {
 
-    private var _binding: FragmentCatBreedListBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var binding: FragmentCatBreedListBinding
     private val viewModel : CatBreedViewModel by activityViewModels()
     private var breedNumberReturned = 20
     private var hasBreeds = 1
@@ -54,22 +54,27 @@ class CatBreedListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        db = Room.databaseBuilder(
-            context!!,
-            CatBreedDatabase::class.java, DATABASE_NAME
-        ).build()
+        try {
+            db = Room.databaseBuilder(
+                context!!,
+                CatBreedDatabase::class.java, DATABASE_NAME
+            ).build()
+        }catch (e: Exception){
+            e.printStackTrace()
+            Toast.makeText(requireContext(), getString(R.string.generic_database_access_error), Toast.LENGTH_SHORT).show()
+        }
     }
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentCatBreedListBinding.inflate(
-            inflater,
-            container,
-            false
-        )
-        return binding.root
+    ): View? {
+        return if (::binding.isInitialized) {
+            binding.root
+        } else {
+            Toast.makeText(requireContext(), getString(R.string.generic_binding_initialization_error), Toast.LENGTH_SHORT).show()
+            super.onCreateView(inflater, container, savedInstanceState)
+        }
     }
 
     override fun onResume() {
@@ -88,33 +93,59 @@ class CatBreedListFragment : Fragment() {
 
     private fun accessListInDatabase(){
         lifecycleScope.launch {
-            val dbList = db.dao.getAllBreedsInDatabase()
-            for(i in dbList){
-                listBreed?.add(CatMainInfo(
-                    i.id,
-                    i.url,
-                    i.width,
-                    i.height,
-                    listOf(CatBreedInfo(id = null, life_span = i.lifespan, name = i.name, origin = i.origin, temperament = i.temperament, description = i.description)),
-                    i.isFavorite
-                ))
-            }
-            viewModel.setCatInformation(listBreed!!)
-            if(!listBreed.isNullOrEmpty()) {
-                binding.composeView.apply {
-                    setContent {
-                        BreedsScreen()
-                    }
+            try {
+                val dbList = db.dao.getAllBreedsInDatabase()
+                for (i in dbList) {
+                    listBreed?.add(
+                        CatMainInfo(
+                            i.id,
+                            i.url,
+                            i.width,
+                            i.height,
+                            listOf(
+                                CatBreedInfo(
+                                    id = null,
+                                    life_span = i.lifespan,
+                                    name = i.name,
+                                    origin = i.origin,
+                                    temperament = i.temperament,
+                                    description = i.description
+                                )
+                            ),
+                            i.isFavorite
+                        )
+                    )
                 }
-            }else{
-                binding.composeView.apply {
-                    setContent {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(text = getString(R.string.no_internet_connection_error), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text(text = getString(R.string.please_connect_message), fontSize = 18.sp)
+                viewModel.setCatInformation(listBreed!!)
+                if (!listBreed.isNullOrEmpty()) {
+                    binding.composeView.apply {
+                        setContent {
+                            BreedsScreen()
+                        }
+                    }
+                } else {
+                    binding.composeView.apply {
+                        setContent {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = getString(R.string.no_internet_connection_error),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = getString(R.string.please_connect_message),
+                                    fontSize = 18.sp
+                                )
+                            }
                         }
                     }
                 }
+            }catch (e : Exception){
+                e.printStackTrace()
+                Toast.makeText(requireContext(), getString(R.string.generic_no_access_data_error), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -178,8 +209,8 @@ class CatBreedListFragment : Fragment() {
                 hasResults = searchNoResults
             })
             if(hasResults) {
-                LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(3),
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(16.dp)
                 ) {
@@ -259,6 +290,7 @@ class CatBreedListFragment : Fragment() {
         }
     }
 
+    //TODO: Repensar search
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun SearchBarField(onListChanged: (ArrayList<CatMainInfo>?, Boolean) -> Unit){
@@ -299,32 +331,6 @@ class CatBreedListFragment : Fragment() {
                         active = false
                     }
                 }else{
-                    lifecycleScope.launch {
-                        val tempList = db.dao.getBreedsInDatabaseByName(text)
-                        for (i in tempList) {
-                            filteredList?.add(
-                                CatMainInfo(
-                                    i.id,
-                                    i.url,
-                                    i.width,
-                                    i.height,
-                                    listOf(
-                                        CatBreedInfo(
-                                            i.breedId,
-                                            i.name,
-                                            i.temperament,
-                                            i.origin,
-                                            i.description,
-                                            i.lifespan
-                                        )
-                                    ),
-                                    i.isFavorite
-                                )
-                            )
-                        }
-                        onListChanged(filteredList, true)
-                        active = false
-                    }
                 }
             },
             active = active,

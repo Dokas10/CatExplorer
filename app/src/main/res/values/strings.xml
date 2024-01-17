@@ -20,4 +20,12 @@
     <string name="details_screen_origin">Origin</string>
     <string name="details_screen_temperament">Temperament</string>
     <string name="details_screen_description">Description</string>
+    
+    <!-- Error messaging -->
+    <string name="generic_database_access_error">Error initializing Database.</string>
+    <string name="generic_database_insertion_error">Error inserting in database.</string>
+    <string name="generic_binding_initialization_error">Error initializing binding.</string>
+    <string name="obtain_breed_details_data_error">Error loading breed information.</string>
+    <string name="generic_no_access_data_error">Error accessing data.</string>
+    <string name="generic_service_message_error">Service error. Please try again later.</string>
 </resources>

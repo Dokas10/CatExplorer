@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,29 +48,46 @@ class CatBreedDetailsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Get all the data used on the screen
-        getArgs()
-        catInformationList = viewModel.getCatInformation().value!!
-        db = Room.databaseBuilder(
-            context!!,
-            CatBreedDatabase::class.java, CatBreedListFragment.DATABASE_NAME
-        ).build()
-    }
 
-    //Function to get position clicked in the list fragment via arguments
-    private fun getArgs(){
-        selectedPosition = arguments!!.getInt(POSITION)
+        arguments?.let {
+            selectedPosition = it.getInt(POSITION)
+        } ?: kotlin.run {
+            binding.composeViewDetails.apply {
+                setContent {
+                    ErrorLabel()
+                }
+            }
+        }
+        viewModel.getCatInformation().value?.let {
+            catInformationList = it
+        } ?: run {
+            binding.composeViewDetails.apply {
+                setContent {
+                    ErrorLabel()
+                }
+            }
+        }
+        try {
+            db = Room.databaseBuilder(
+                context!!,
+                CatBreedDatabase::class.java, CatBreedListFragment.DATABASE_NAME
+            ).build()
+        }catch (e : Exception){
+            e.printStackTrace()
+            Toast.makeText(requireContext(), getString(R.string.generic_database_access_error), Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentCatBreedDetailsBinding.inflate(
-            inflater,
-            container,
-            false
-        )
-        return binding.root
+    ): View? {
+        return if (::binding.isInitialized) {
+            binding.root
+        } else {
+            Toast.makeText(requireContext(), getString(R.string.generic_binding_initialization_error), Toast.LENGTH_SHORT).show()
+            super.onCreateView(inflater, container, savedInstanceState)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -86,7 +105,9 @@ class CatBreedDetailsFragment : Fragment() {
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
-            modifier = Modifier.verticalScroll(rememberScrollState()).padding(10.dp)
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(10.dp)
         ) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(15.dp)) {
@@ -94,7 +115,9 @@ class CatBreedDetailsFragment : Fragment() {
                     FavoriteButton(modifier = Modifier.padding(20.dp))
                 }
             }
-            Box(modifier = Modifier.fillMaxWidth().padding(10.dp), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp), contentAlignment = Alignment.Center) {
                 AsyncImage(
                     model = catInformationList[selectedPosition].url,
                     contentDescription = null)
@@ -137,6 +160,13 @@ class CatBreedDetailsFragment : Fragment() {
                 contentDescription = null,
                 modifier = Modifier.size(50.dp)
             )
+        }
+    }
+
+    @Composable
+    fun ErrorLabel(){
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = getString(R.string.obtain_breed_details_data_error), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 
