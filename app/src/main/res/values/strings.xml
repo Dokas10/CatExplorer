@@ -2,4 +2,22 @@
     <string name="app_name">CatExplorer</string>
     <string name="nav_open">Open</string>
     <string name="nav_close">Close</string>
+
+    <!-- List screen -->
+    <string name="search_label">Search</string>
+    <string name="search_content_description">Search icon</string>
+    <string name="close_content_description">Close icon</string>
+    <string name="no_results_error">No results found!</string>
+    <string name="service_error">Service error. Please try again later.</string>
+    <string name="no_internet_connection_error">You don\'t have internet connection and the database is empty!</string>
+    <string name="please_connect_message">Please connect to the internet to load cat breeds.</string>
+
+    <!--Favorite screen -->
+    <string name="life_span_message">%s years</string>
+    <string name="no_favorites_message">No favorites were added.</string>
+
+    <!-- Details screen -->
+    <string name="details_screen_origin">Origin</string>
+    <string name="details_screen_temperament">Temperament</string>
+    <string name="details_screen_description">Description</string>
 </resources>

@@ -2,6 +2,7 @@ package com.catexplorer.view
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
@@ -12,6 +13,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.catexplorer.R
 import com.catexplorer.databinding.ActivityMainBinding
+import com.catexplorer.utils.NetworkUtils
+import com.catexplorer.viewModel.CatBreedViewModel
 
 
 class CatBreedMainActivity : AppCompatActivity() {
@@ -20,6 +23,9 @@ class CatBreedMainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration : AppBarConfiguration
     private lateinit var drawerLayout: DrawerLayout
+    private val networkUtils = NetworkUtils(this)
+    private val viewModel: CatBreedViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
@@ -41,5 +47,9 @@ class CatBreedMainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.fragment)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    fun checkInternetConnection() : Boolean{
+        return networkUtils.isNetworkAvailable()
     }
 }

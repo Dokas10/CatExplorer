@@ -1,6 +1,5 @@
 package com.catexplorer.utils
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
@@ -11,5 +10,13 @@ interface CatBreedDao {
     @Upsert
     suspend fun insertBreed(breed: CatInfoTable)
     @Query("SELECT * FROM CatInfoTable WHERE isFavorite=1")
-    suspend fun getFavoriteBreeds(): List<CatInfoTable>
+    suspend fun getFavoriteBreeds(): MutableList<CatInfoTable>
+    @Query("SELECT * FROM CatInfoTable")
+    suspend fun getAllBreedsInDatabase(): List<CatInfoTable>
+
+    @Query("SELECT * FROM CatInfoTable WHERE name LIKE :name")
+    suspend fun getBreedsInDatabaseByName(name : String): List<CatInfoTable>
+
+    @Query("SELECT * FROM CatInfoTable WHERE id LIKE :id")
+    suspend fun getBreedsInDatabaseById(id : String): CatInfoTable
 }

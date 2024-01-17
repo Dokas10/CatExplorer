@@ -4,9 +4,14 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.catexplorer.data.CatBreedInfo
+import com.catexplorer.data.CatInfoTable
 import com.catexplorer.data.CatMainInfo
+import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.utils.RetrofitClientInstance
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -19,6 +24,8 @@ class CatBreedViewModel : ViewModel() {
     private var catImagesByBreed = MutableLiveData<ArrayList<CatMainInfo>>()
 
     private var catInformation = MutableLiveData<ArrayList<CatMainInfo>>()
+
+    //Functions with callbacks to the multiple API endpoints
     fun getCatList(limit : Int, has_breeds: Int) {
         RetrofitClientInstance.apiService.getCatBreedList(limit, has_breeds).enqueue(object  : Callback<ArrayList<CatMainInfo>> {
             override fun onResponse(call: Call<ArrayList<CatMainInfo>>, response: Response<ArrayList<CatMainInfo>>) {
@@ -37,7 +44,7 @@ class CatBreedViewModel : ViewModel() {
     fun getCatBreedInfo(id : String?) {
         RetrofitClientInstance.apiService.getCatBreedInfo(id).enqueue(object  : Callback<CatMainInfo> {
             override fun onResponse(call: Call<CatMainInfo>, response: Response<CatMainInfo>) {
-                if (response.body()!=null){
+                if (response.body() != null){
                     catBreedInfoLiveData.value = response.body()!!
                 }
                 else{
@@ -80,6 +87,7 @@ class CatBreedViewModel : ViewModel() {
         })
     }
 
+    //Observable functions
     fun observeCatListLiveData() : LiveData<ArrayList<CatMainInfo>> {
         return catListLiveData
     }
@@ -94,12 +102,33 @@ class CatBreedViewModel : ViewModel() {
         return catImagesByBreed
     }
 
+    //Getter and setter of the data that is common to the multiple fragments
     fun setCatInformation(info : ArrayList<CatMainInfo>){
         this.catInformation.value = info
     }
 
     fun getCatInformation() : LiveData<ArrayList<CatMainInfo>>{
         return catInformation
+    }
+
+    //Database functions
+    fun insertDataIntoDatabase(dbInstance: CatBreedDatabase, itemToInsert: CatMainInfo){
+        viewModelScope.launch {
+            val breed = CatInfoTable(
+                itemToInsert.id,
+                itemToInsert.url,
+                itemToInsert.width,
+                itemToInsert.height,
+                itemToInsert.catBreedInfo[0].id!!,
+                itemToInsert.catBreedInfo[0].life_span!!,
+                itemToInsert.catBreedInfo[0].name!!,
+                itemToInsert.catBreedInfo[0].origin!!,
+                itemToInsert.catBreedInfo[0].temperament!!,
+                itemToInsert.catBreedInfo[0].description!!,
+                itemToInsert.favorite
+            )
+            dbInstance.dao.insertBreed(breed)
+        }
     }
 
 }
