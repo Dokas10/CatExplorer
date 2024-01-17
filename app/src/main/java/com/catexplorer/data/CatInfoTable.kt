@@ -16,6 +16,8 @@ data class CatInfoTable(
     @ColumnInfo
     var height: Int,
     @ColumnInfo
+    var breedId: String,
+    @ColumnInfo
     var lifespan: String,
     @ColumnInfo
     var name: String,

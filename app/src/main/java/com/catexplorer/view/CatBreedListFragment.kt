@@ -22,15 +22,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.room.Room
 import coil.compose.AsyncImage
 import com.catexplorer.R
 import com.catexplorer.data.CatBreedInfo
-import com.catexplorer.data.CatInfoTable
 import com.catexplorer.data.CatMainInfo
 import com.catexplorer.databinding.FragmentCatBreedListBinding
 import com.catexplorer.utils.CatBreedDatabase
@@ -46,7 +45,7 @@ class CatBreedListFragment : Fragment() {
 
     private var _binding: FragmentCatBreedListBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: CatBreedViewModel
+    private val viewModel : CatBreedViewModel by activityViewModels()
     private var breedNumberReturned = 20
     private var hasBreeds = 1
     private var listBreedInfo: ArrayList<CatBreedInfo> = ArrayList()
@@ -57,7 +56,7 @@ class CatBreedListFragment : Fragment() {
         super.onCreate(savedInstanceState)
         db = Room.databaseBuilder(
             context!!,
-            CatBreedDatabase::class.java, "CatInfoDatabase"
+            CatBreedDatabase::class.java, DATABASE_NAME
         ).build()
     }
     override fun onCreateView(
@@ -75,53 +74,92 @@ class CatBreedListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        observeViewModel()
+        if((activity as CatBreedMainActivity).checkInternetConnection()) {
+            if(!listBreed.isNullOrEmpty()){
+                initializeUIComponents()
+            }else {
+                makeAllApiCalls()
+                populateListsFromApi(true)
+            }
+        }else{
+            accessListInDatabase()
+        }
     }
 
-    private fun observeViewModel(){
-        if(!listBreed.isNullOrEmpty()){
-            binding.composeView.apply {
-                setContent {
-                    BreedsScreen()
+    private fun accessListInDatabase(){
+        lifecycleScope.launch {
+            val dbList = db.dao.getAllBreedsInDatabase()
+            for(i in dbList){
+                listBreed?.add(CatMainInfo(
+                    i.id,
+                    i.url,
+                    i.width,
+                    i.height,
+                    listOf(CatBreedInfo(id = null, life_span = i.lifespan, name = i.name, origin = i.origin, temperament = i.temperament, description = i.description)),
+                    i.isFavorite
+                ))
+            }
+            viewModel.setCatInformation(listBreed!!)
+            if(!listBreed.isNullOrEmpty()) {
+                binding.composeView.apply {
+                    setContent {
+                        BreedsScreen()
+                    }
+                }
+            }else{
+                binding.composeView.apply {
+                    setContent {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = getString(R.string.no_internet_connection_error), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(text = getString(R.string.please_connect_message), fontSize = 18.sp)
+                        }
+                    }
                 }
             }
-        }else {
-            viewModel = ViewModelProvider(requireActivity())[CatBreedViewModel::class.java]
-            viewModel.getCatList(breedNumberReturned, hasBreeds)
-            viewModel.getAllBreeds()
-            viewModel.observeCatListLiveData().observe(viewLifecycleOwner, Observer { list ->
+        }
+    }
+    private fun makeAllApiCalls(){
+        viewModel.getCatList(breedNumberReturned, hasBreeds)
+        viewModel.getAllBreeds()
+        viewModel.observeCatListLiveData().observe(viewLifecycleOwner, Observer { list ->
+            if(!list.isNullOrEmpty()) {
                 for (i in list.indices) {
                     viewModel.getCatBreedInfo(list[i].id)
                 }
-                viewModel.observeCatBreedInfoLiveData().observe(viewLifecycleOwner, Observer {
-                    listBreed?.add(it)
-                    lifecycleScope.launch {
-                        val breed = CatInfoTable(
-                            it.id,
-                            it.url,
-                            it.width,
-                            it.height,
-                            it.catBreedInfo!![0].life_span!!,
-                            it.catBreedInfo!![0].name!!,
-                            it.catBreedInfo!![0].origin!!,
-                            it.catBreedInfo!![0].temperament!!,
-                            it.catBreedInfo!![0].description!!,
-                            false
-                        )
-                        db.dao.insertBreed(breed)
-                    }
-                    if (listBreed?.size == list.size) {
-                        binding.composeView.apply {
-                            setContent {
-                                BreedsScreen()
-                            }
+            }else{
+                binding.composeView.apply {
+                    setContent {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = getString(R.string.no_favorites_message), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                })
-            })
-            viewModel.observeCatBreedListLiveData().observe(this, Observer {
-                listBreedInfo = it
-            })
+                }
+            }
+        })
+    }
+
+    private fun populateListsFromApi(addToDB: Boolean){
+        listBreed!!.clear()
+        viewModel.observeCatBreedInfoLiveData().observe(viewLifecycleOwner, Observer {
+            listBreed?.add(it)
+            if(addToDB) {
+                viewModel.insertDataIntoDatabase(db, it)
+            }
+            if (listBreed?.size == breedNumberReturned) {
+                viewModel.setCatInformation(listBreed!!)
+                initializeUIComponents()
+            }
+        })
+        viewModel.observeCatBreedListLiveData().observe(this, Observer {
+            listBreedInfo = it
+        })
+    }
+
+    private fun initializeUIComponents(){
+        binding.composeView.apply {
+            setContent {
+                BreedsScreen()
+            }
         }
     }
 
@@ -134,6 +172,7 @@ class CatBreedListFragment : Fragment() {
             SearchBarField(onListChanged = { searchList, searchNoResults ->
                 if(!searchList.isNullOrEmpty()) {
                     listBreed = searchList
+                    viewModel.setCatInformation(searchList)
                     list = searchList
                 }
                 hasResults = searchNoResults
@@ -151,13 +190,7 @@ class CatBreedListFragment : Fragment() {
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
                                 modifier = Modifier.clickable {
-                                    viewModel.setCatInformation(listBreed!!)
-                                    var bundle = Bundle()
-                                    bundle.putInt("Position", index)
-                                    findNavController().navigate(
-                                        R.id.action_catBreedListFragment_to_catBreedDetailsFragment,
-                                        bundle
-                                    )
+                                    navigateToDetailsScreen(index)
                                 }
                             ) {
                                 Box(contentAlignment = Alignment.TopEnd) {
@@ -174,7 +207,7 @@ class CatBreedListFragment : Fragment() {
 
                                 }
                                 Text(
-                                    text = item.catBreedInfo!![0].name!!,
+                                    text = item.catBreedInfo[0].name!!,
                                 )
                             }
                         }
@@ -182,10 +215,19 @@ class CatBreedListFragment : Fragment() {
                 }
             }else{
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "No results found!", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = getString(R.string.no_results_error), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
+    }
+
+    private fun navigateToDetailsScreen(position: Int){
+        val bundle = Bundle()
+        bundle.putInt(CatBreedDetailsFragment.POSITION, position)
+        findNavController().navigate(
+            R.id.action_catBreedListFragment_to_catBreedDetailsFragment,
+            bundle
+        )
     }
 
     @Composable
@@ -202,21 +244,7 @@ class CatBreedListFragment : Fragment() {
             onCheckedChange = {
                 isFavorite = !isFavorite
                 listBreed!![position].favorite = isFavorite
-                lifecycleScope.launch {
-                    val breed = CatInfoTable(
-                        listBreed!![position].id,
-                        listBreed!![position].url,
-                        listBreed!![position].width,
-                        listBreed!![position].height,
-                        listBreed!![position].catBreedInfo!![0].life_span!!,
-                        listBreed!![position].catBreedInfo!![0].name!!,
-                        listBreed!![position].catBreedInfo!![0].origin!!,
-                        listBreed!![position].catBreedInfo!![0].temperament!!,
-                        listBreed!![position].catBreedInfo!![0].description!!,
-                        listBreed!![position].favorite
-                    )
-                    db.dao.insertBreed(breed)
-                }
+                viewModel.insertDataIntoDatabase(db, listBreed!![position])
             }
         ) {
             Icon(
@@ -244,27 +272,59 @@ class CatBreedListFragment : Fragment() {
                 text = it
             },
             onSearch ={
-                var breedId = ""
-                for(i in listBreedInfo){
-                    if(i.name!!.contains(text)){
-                        breedId = if(breedId.isEmpty()){
-                            i.id!!
-                        }else{
-                            breedId + "," + i.id!!
+                if(filteredList == null){
+                    filteredList = ArrayList()
+                }
+                if((activity as CatBreedMainActivity).checkInternetConnection()) {
+                    var breedId = ""
+                    for (i in listBreedInfo) {
+                        if (i.name!!.contains(text)) {
+                            breedId = if (breedId.isEmpty()) {
+                                i.id!!
+                            } else {
+                                breedId + "," + i.id!!
+                            }
                         }
                     }
-                }
-                if(!breedId.isEmpty()) {
-                    viewModel.getImagesByBreed(breedNumberReturned, breedId)
-                    viewModel.observeCatImagesByBreedLiveData().observe(this, Observer {
-                        filteredList = it
+                    if (!breedId.isEmpty()) {
+                        viewModel.getImagesByBreed(breedNumberReturned, breedId)
+                        viewModel.observeCatImagesByBreedLiveData().observe(this, Observer {
+                            filteredList = it
+                            onListChanged(filteredList, true)
+                            active = false
+                        })
+                    } else {
+                        filteredList = ArrayList()
+                        onListChanged(filteredList, false)
+                        active = false
+                    }
+                }else{
+                    lifecycleScope.launch {
+                        val tempList = db.dao.getBreedsInDatabaseByName(text)
+                        for (i in tempList) {
+                            filteredList?.add(
+                                CatMainInfo(
+                                    i.id,
+                                    i.url,
+                                    i.width,
+                                    i.height,
+                                    listOf(
+                                        CatBreedInfo(
+                                            i.breedId,
+                                            i.name,
+                                            i.temperament,
+                                            i.origin,
+                                            i.description,
+                                            i.lifespan
+                                        )
+                                    ),
+                                    i.isFavorite
+                                )
+                            )
+                        }
                         onListChanged(filteredList, true)
                         active = false
-                    })
-                }else{
-                    filteredList = ArrayList()
-                    onListChanged(filteredList, false)
-                    active = false
+                    }
                 }
             },
             active = active,
@@ -272,10 +332,10 @@ class CatBreedListFragment : Fragment() {
                 active = it
             },
             placeholder = {
-                Text(text = "Search")
+                Text(text = getString(R.string.search_label))
             },
             leadingIcon = {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+                Icon(imageVector = Icons.Default.Search, contentDescription = getString(R.string.search_content_description))
             },
             trailingIcon = {
                 if(active) {
@@ -283,17 +343,27 @@ class CatBreedListFragment : Fragment() {
                         modifier = Modifier.clickable {
                             if(text.isNotEmpty()) {
                                 text = ""
+                                if((activity as CatBreedMainActivity).checkInternetConnection()){
+                                    populateListsFromApi(false)
+                                }else{
+                                    accessListInDatabase()
+                                }
+                                filteredList = listBreed
+                                onListChanged(filteredList, true)
                             }else{
                                 active = false
-                                filteredList = listBreed
                             }
                         },
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close Icon"
+                        contentDescription = getString(R.string.close_content_description)
                     )
                 }
             },
             content = {}
         )
+    }
+
+    companion object{
+        const val DATABASE_NAME = "CatInfoDatabase"
     }
 }

@@ -8,8 +8,8 @@
     <fragment
         android:id="@+id/catBreedListFragment"
         android:name="com.catexplorer.view.CatBreedListFragment"
-        android:label="fragment_cat_breed_list"
-        tools:layout="@layout/fragment_cat_breed_list" >
+        android:label="Breed List"
+        tools:layout="@layout/fragment_cat_breed_list">
         <action
             android:id="@+id/action_catBreedListFragment_to_catBreedDetailsFragment"
             app:destination="@id/catBreedDetailsFragment" />
@@ -17,8 +17,8 @@
     <fragment
         android:id="@+id/catBreedDetailsFragment"
         android:name="com.catexplorer.view.CatBreedDetailsFragment"
-        android:label="fragment_cat_breed_details"
-        tools:layout="@layout/fragment_cat_breed_details" >
+        android:label="Breed Details"
+        tools:layout="@layout/fragment_cat_breed_details">
         <action
             android:id="@+id/action_catBreedDetailsFragment_to_catBreedListFragment"
             app:destination="@id/catBreedListFragment" />

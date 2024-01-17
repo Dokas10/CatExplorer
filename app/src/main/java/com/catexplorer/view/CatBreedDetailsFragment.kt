@@ -18,14 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
+import androidx.room.Room
 import coil.compose.AsyncImage
+import com.catexplorer.R
 import com.catexplorer.data.CatMainInfo
 import com.catexplorer.databinding.FragmentCatBreedDetailsBinding
+import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.viewModel.CatBreedViewModel
 
 /**
@@ -36,19 +38,25 @@ import com.catexplorer.viewModel.CatBreedViewModel
 class CatBreedDetailsFragment : Fragment() {
 
     private lateinit var binding: FragmentCatBreedDetailsBinding
-    private lateinit var viewModel: CatBreedViewModel
+    private val viewModel: CatBreedViewModel by activityViewModels()
     private var catInformationList: ArrayList<CatMainInfo> = ArrayList()
     private var selectedPosition = -1
+    private lateinit var db: CatBreedDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //Get all the data used on the screen
         getArgs()
-        viewModel = ViewModelProvider(requireActivity())[CatBreedViewModel::class.java]
         catInformationList = viewModel.getCatInformation().value!!
+        db = Room.databaseBuilder(
+            context!!,
+            CatBreedDatabase::class.java, CatBreedListFragment.DATABASE_NAME
+        ).build()
     }
 
+    //Function to get position clicked in the list fragment via arguments
     private fun getArgs(){
-        selectedPosition = arguments!!.getInt("Position")
+        selectedPosition = arguments!!.getInt(POSITION)
     }
 
     override fun onCreateView(
@@ -72,7 +80,7 @@ class CatBreedDetailsFragment : Fragment() {
         }
     }
 
-    @Preview
+    //Details layout composable function
     @Composable
     fun DetailsLayout() {
         Column(
@@ -82,7 +90,7 @@ class CatBreedDetailsFragment : Fragment() {
         ) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(15.dp)) {
-                    Text(text = catInformationList[selectedPosition].catBreedInfo!![0].name!!, fontSize = 30.sp, fontWeight = Bold)
+                    Text(text = catInformationList[selectedPosition].catBreedInfo[0].name!!, fontSize = 30.sp, fontWeight = Bold)
                     FavoriteButton(modifier = Modifier.padding(20.dp))
                 }
             }
@@ -91,15 +99,16 @@ class CatBreedDetailsFragment : Fragment() {
                     model = catInformationList[selectedPosition].url,
                     contentDescription = null)
             }
-            Text(text = "Origin", fontSize = 20.sp, fontWeight = Bold)
-            Text(text = catInformationList[selectedPosition].catBreedInfo!![0].origin!!)
-            Text(text = "Temperament", fontSize = 20.sp, fontWeight = Bold)
-            Text(text = catInformationList[selectedPosition].catBreedInfo!![0].temperament!!)
-            Text(text = "Description", fontSize = 20.sp, fontWeight = Bold)
-            Text(text = catInformationList[selectedPosition].catBreedInfo!![0].description!!)
+            Text(text = getString(R.string.details_screen_origin), fontSize = 20.sp, fontWeight = Bold)
+            Text(text = catInformationList[selectedPosition].catBreedInfo[0].origin!!)
+            Text(text = getString(R.string.details_screen_temperament), fontSize = 20.sp, fontWeight = Bold)
+            Text(text = catInformationList[selectedPosition].catBreedInfo[0].temperament!!)
+            Text(text = getString(R.string.details_screen_description), fontSize = 20.sp, fontWeight = Bold)
+            Text(text = catInformationList[selectedPosition].catBreedInfo[0].description!!)
         }
     }
 
+    //Favorite button composable function
     @Composable
     fun FavoriteButton(
         modifier: Modifier = Modifier,
@@ -111,9 +120,11 @@ class CatBreedDetailsFragment : Fragment() {
         IconToggleButton(
             checked = isFavorite,
             onCheckedChange = {
+                //If button is clicked, changes the favorite state of the button and of the breed that is presented in the screen (Data is updated in the ViewModel)
                 isFavorite = !isFavorite
-                this@CatBreedDetailsFragment.catInformationList[selectedPosition].favorite = isFavorite
-                viewModel.setCatInformation(this@CatBreedDetailsFragment.catInformationList)
+                catInformationList[selectedPosition].favorite = isFavorite
+                viewModel.insertDataIntoDatabase(db, catInformationList[selectedPosition])
+                viewModel.setCatInformation(catInformationList)
             }
         ) {
             Icon(
@@ -127,5 +138,9 @@ class CatBreedDetailsFragment : Fragment() {
                 modifier = Modifier.size(50.dp)
             )
         }
+    }
+
+    companion object{
+        const val POSITION : String = "Position"
     }
 }
