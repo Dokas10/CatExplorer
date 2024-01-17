@@ -22,17 +22,10 @@
         <action
             android:id="@+id/action_catBreedDetailsFragment_to_catBreedListFragment"
             app:destination="@id/catBreedListFragment" />
-        <action
-            android:id="@+id/action_catBreedDetailsFragment_to_breedFavoritesFragment2"
-            app:destination="@id/breedFavoritesFragment" />
     </fragment>
     <fragment
         android:id="@+id/breedFavoritesFragment"
         android:name="com.catexplorer.view.BreedFavoritesFragment"
-        android:label="fragment_breed_favorites"
-        tools:layout="@layout/fragment_breed_favorites" >
-        <action
-            android:id="@+id/action_breedFavoritesFragment2_to_catBreedDetailsFragment"
-            app:destination="@id/catBreedDetailsFragment" />
-    </fragment>
+        android:label="Favorites"
+        tools:layout="@layout/fragment_breed_favorites" />
 </navigation>
