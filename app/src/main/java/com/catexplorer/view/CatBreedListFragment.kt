@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.room.Room
 import coil.compose.AsyncImage
@@ -34,6 +35,7 @@ import com.catexplorer.data.CatMainInfo
 import com.catexplorer.databinding.FragmentCatBreedListBinding
 import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.viewModel.CatBreedViewModel
+import kotlinx.coroutines.launch
 
 /**
  * A simple [Fragment] subclass.
@@ -308,7 +310,6 @@ class CatBreedListFragment : Fragment() {
         }
     }
 
-    //TODO: Repensar search
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun SearchBarField(onListChanged: (ArrayList<CatMainInfo>?, Boolean) -> Unit){
@@ -344,12 +345,20 @@ class CatBreedListFragment : Fragment() {
                             active = false
                         })
                     } else {
-                        filteredList = ArrayList()
+                        filteredList = viewModel.getCatInformation().value
                         onListChanged(filteredList, false)
                         active = false
                     }
                 }else{
-
+                    if(text.isNotEmpty()){
+                        viewModel.getBreedsByNameFromDatabase(db, text)
+                        viewModel.getCatInformation().observe(this, Observer {
+                            filteredList = it
+                            active = false
+                        })
+                    }else{
+                        viewModel.getAllDataFromDatabase(db)
+                    }
                 }
             },
             active = active,
@@ -369,12 +378,10 @@ class CatBreedListFragment : Fragment() {
                             if(text.isNotEmpty()) {
                                 text = ""
                                 if((activity as CatBreedMainActivity).checkInternetConnection()){
-                                    populateListsFromApi(addToDB = false, clearList = true)
+                                    populateListsFromApi(addToDB = false, clearList = false)
                                 }else{
                                     accessListInDatabase()
                                 }
-                                filteredList = listBreed
-                                onListChanged(filteredList, true)
                             }else{
                                 active = false
                             }

@@ -164,6 +164,17 @@ class CatBreedViewModel : ViewModel() {
         }
     }
 
+    fun getBreedsByNameFromDatabase(dbInstance: CatBreedDatabase, text: String){
+        viewModelScope.launch {
+            val favsList = dbInstance.dao.getBreedsInDatabaseByName(text)
+            val tempList = ArrayList<CatMainInfo>()
+            for (i in favsList){
+                tempList.add(CatMainInfo(i.id, i.url, i.width, i.height, listOf(CatBreedInfo(i.breedId, i.name, i.temperament, i.origin, i.description, i.lifespan)), i.isFavorite))
+            }
+            setCatInformation(tempList)
+        }
+    }
+
     companion object{
         private const val TAG = "TAG"
     }
