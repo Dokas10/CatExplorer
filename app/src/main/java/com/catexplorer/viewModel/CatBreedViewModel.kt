@@ -25,6 +25,7 @@ class CatBreedViewModel : ViewModel() {
     private var catImagesByBreed = MutableLiveData<ArrayList<CatMainInfo>>()
 
     private var catInformation = MutableLiveData<ArrayList<CatMainInfo>>()
+    private var favoritesInformation = MutableLiveData<ArrayList<CatMainInfo>>()
 
     //Functions with callbacks to the multiple API endpoints
     fun getCatList(limit : Int, has_breeds: Int) {
@@ -113,6 +114,14 @@ class CatBreedViewModel : ViewModel() {
         return catInformation
     }
 
+    fun setFavoritesInformation(info : ArrayList<CatMainInfo>){
+        this.favoritesInformation.value = info
+    }
+
+    fun getFavoritesInformation() : LiveData<ArrayList<CatMainInfo>>{
+        return favoritesInformation
+    }
+
     //Database functions
     fun insertDataIntoDatabase(dbInstance: CatBreedDatabase, itemToInsert: CatMainInfo){
         viewModelScope.launch {
@@ -130,6 +139,28 @@ class CatBreedViewModel : ViewModel() {
                 itemToInsert.favorite
             )
             dbInstance.dao.insertBreed(breed)
+        }
+    }
+
+    fun getAllDataFromDatabase(dbInstance: CatBreedDatabase){
+        viewModelScope.launch {
+            val dbList = dbInstance.dao.getAllBreedsInDatabase()
+            val tempList = ArrayList<CatMainInfo>()
+            for (i in dbList) {
+                tempList.add(CatMainInfo(i.id, i.url, i.width, i.height, listOf(CatBreedInfo(id = i.breedId, life_span = i.lifespan, name = i.name, origin = i.origin, temperament = i.temperament, description = i.description)), i.isFavorite))
+            }
+            setCatInformation(tempList)
+        }
+    }
+
+    fun getAllFavoritesFromDatabase(dbInstance: CatBreedDatabase){
+        viewModelScope.launch {
+            val favsList = dbInstance.dao.getFavoriteBreeds()
+            val tempList = ArrayList<CatMainInfo>()
+            for (i in favsList){
+                tempList.add(CatMainInfo(i.id, i.url, i.width, i.height, listOf(CatBreedInfo(i.breedId, i.name, i.temperament, i.origin, i.description, i.lifespan)), i.isFavorite))
+            }
+            setFavoritesInformation(tempList)
         }
     }
 

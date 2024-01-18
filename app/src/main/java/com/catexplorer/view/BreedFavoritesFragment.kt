@@ -32,6 +32,7 @@ import com.catexplorer.R
 import com.catexplorer.data.CatBreedInfo
 import com.catexplorer.data.CatMainInfo
 import com.catexplorer.databinding.FragmentBreedFavoritesBinding
+import com.catexplorer.databinding.FragmentCatBreedListBinding
 import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.viewModel.CatBreedViewModel
 import kotlinx.coroutines.launch
@@ -60,22 +61,16 @@ class BreedFavoritesFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return if (::binding.isInitialized) {
-            binding.root
-        } else {
+        try {
+            binding = FragmentBreedFavoritesBinding.inflate(
+                inflater,
+                container,
+                false
+            )
+            return binding.root
+        }catch (e : Exception){
             Toast.makeText(requireContext(), getString(R.string.generic_binding_initialization_error), Toast.LENGTH_SHORT).show()
-            super.onCreateView(inflater, container, savedInstanceState)
-        }
-    }
-
-    //TODO: Pensar numa maneira melhor de fazer isto
-    //Method to add to favorites list all the database entries that were added as favorites
-    private fun getFavoritesFromDB(){
-        lifecycleScope.launch {
-            val tempList = db.dao.getFavoriteBreeds()
-            for (i in tempList){
-                favorites.add(CatMainInfo(i.id, i.url, i.width, i.height, listOf(CatBreedInfo(i.breedId, i.name, i.temperament, i.origin, i.description, i.lifespan)), i.isFavorite))
-            }
+            return onCreateView(inflater, container, savedInstanceState)
         }
     }
 
@@ -89,7 +84,15 @@ class BreedFavoritesFragment : Fragment() {
         viewModel.getCatInformation().observe(this, Observer {
             if(it != null) {
                 allBreeds = it
-                getFavoritesFromDB()
+            }else{
+                binding.composeViewFavs.setContent {
+                    Toast.makeText(requireContext(), getString(R.string.generic_no_access_data_error), Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+        viewModel.getFavoritesInformation().observe(this, Observer {
+            if(it != null) {
+                favorites = it
                 if(favorites.isNotEmpty()) {
                     binding.composeViewFavs.apply {
                         setContent {
@@ -169,16 +172,18 @@ class BreedFavoritesFragment : Fragment() {
             checked = isFavorite,
             onCheckedChange = {
                 isFavorite = !isFavorite
-                favorites[position].favorite = isFavorite
-                lifecycleScope.launch {
-                    try {
-                        viewModel.insertDataIntoDatabase(db, favorites[position])
-                    }catch (e: Exception){
-                        e.printStackTrace()
-                        Toast.makeText(requireContext(), getString(R.string.generic_database_insertion_error), Toast.LENGTH_SHORT).show()
-                    }
+                try {
+                    favorites[position].favorite = isFavorite
+                    viewModel.setCatInformation(updateData())
+                    viewModel.insertDataIntoDatabase(db, favorites[position])
+                }catch (e: Exception){
+                    e.printStackTrace()
+                    Toast.makeText(requireContext(), getString(R.string.generic_database_insertion_error), Toast.LENGTH_SHORT).show()
                 }
-                viewModel.setCatInformation(updateData())
+                if(!isFavorite){
+                    favorites.removeAt(position)
+                }
+                viewModel.setFavoritesInformation(favorites)
             }
         ) {
             Icon(

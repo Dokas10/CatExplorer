@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.room.Room
 import coil.compose.AsyncImage
@@ -35,7 +34,6 @@ import com.catexplorer.data.CatMainInfo
 import com.catexplorer.databinding.FragmentCatBreedListBinding
 import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.viewModel.CatBreedViewModel
-import kotlinx.coroutines.launch
 
 /**
  * A simple [Fragment] subclass.
@@ -48,8 +46,10 @@ class CatBreedListFragment : Fragment() {
     private val viewModel : CatBreedViewModel by activityViewModels()
     private var breedNumberReturned = 20
     private var hasBreeds = 1
+    private var page = 1
     private var listBreedInfo: ArrayList<CatBreedInfo> = ArrayList()
     private var listBreed : ArrayList<CatMainInfo>? = ArrayList()
+    private var favoritesList : ArrayList<CatMainInfo>? = ArrayList()
     private lateinit var db: CatBreedDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,56 +68,53 @@ class CatBreedListFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return if (::binding.isInitialized) {
-            binding.root
-        } else {
+    ): View {
+        try {
+            binding = FragmentCatBreedListBinding.inflate(
+                inflater,
+                container,
+                false
+            )
+            return binding.root
+        }catch (e : Exception){
             Toast.makeText(requireContext(), getString(R.string.generic_binding_initialization_error), Toast.LENGTH_SHORT).show()
-            super.onCreateView(inflater, container, savedInstanceState)
+            return onCreateView(inflater, container, savedInstanceState)
         }
     }
 
     override fun onResume() {
         super.onResume()
+        populateFavoritesList()
         if((activity as CatBreedMainActivity).checkInternetConnection()) {
             if(!listBreed.isNullOrEmpty()){
                 initializeUIComponents()
             }else {
-                makeAllApiCalls()
-                populateListsFromApi(true)
+                makeAllApiCalls(true)
+                populateListsFromApi(addToDB = true, clearList = true)
             }
         }else{
             accessListInDatabase()
         }
     }
 
+    private fun populateFavoritesList(){
+        if(viewModel.getFavoritesInformation().value.isNullOrEmpty()){
+            favoritesList!!.clear()
+            viewModel.getAllFavoritesFromDatabase(db)
+            viewModel.getFavoritesInformation().observe(this, Observer{
+                favoritesList = it
+            })
+        }else{
+            favoritesList = viewModel.getFavoritesInformation().value
+        }
+    }
+
     private fun accessListInDatabase(){
-        lifecycleScope.launch {
-            try {
-                val dbList = db.dao.getAllBreedsInDatabase()
-                for (i in dbList) {
-                    listBreed?.add(
-                        CatMainInfo(
-                            i.id,
-                            i.url,
-                            i.width,
-                            i.height,
-                            listOf(
-                                CatBreedInfo(
-                                    id = null,
-                                    life_span = i.lifespan,
-                                    name = i.name,
-                                    origin = i.origin,
-                                    temperament = i.temperament,
-                                    description = i.description
-                                )
-                            ),
-                            i.isFavorite
-                        )
-                    )
-                }
-                viewModel.setCatInformation(listBreed!!)
-                if (!listBreed.isNullOrEmpty()) {
+        try {
+            viewModel.getAllDataFromDatabase(db)
+            viewModel.getCatInformation().observe(this, Observer{
+                if (!it.isNullOrEmpty()) {
+                    listBreed = it
                     binding.composeView.apply {
                         setContent {
                             BreedsScreen()
@@ -143,15 +140,17 @@ class CatBreedListFragment : Fragment() {
                         }
                     }
                 }
-            }catch (e : Exception){
-                e.printStackTrace()
-                Toast.makeText(requireContext(), getString(R.string.generic_no_access_data_error), Toast.LENGTH_SHORT).show()
-            }
+            })
+        }catch (e : Exception){
+            e.printStackTrace()
+            Toast.makeText(requireContext(), getString(R.string.generic_no_access_data_error), Toast.LENGTH_SHORT).show()
         }
     }
-    private fun makeAllApiCalls(){
+    private fun makeAllApiCalls(callBreeds: Boolean){
         viewModel.getCatList(breedNumberReturned, hasBreeds)
-        viewModel.getAllBreeds()
+        if(callBreeds) {
+            viewModel.getAllBreeds()
+        }
         viewModel.observeCatListLiveData().observe(viewLifecycleOwner, Observer { list ->
             if(!list.isNullOrEmpty()) {
                 for (i in list.indices) {
@@ -161,7 +160,7 @@ class CatBreedListFragment : Fragment() {
                 binding.composeView.apply {
                     setContent {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(text = getString(R.string.no_favorites_message), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(text = getString(R.string.service_error), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -169,14 +168,18 @@ class CatBreedListFragment : Fragment() {
         })
     }
 
-    private fun populateListsFromApi(addToDB: Boolean){
-        listBreed!!.clear()
+    private fun populateListsFromApi(addToDB: Boolean, clearList: Boolean){
+        if(clearList) {
+            listBreed!!.clear()
+        }
         viewModel.observeCatBreedInfoLiveData().observe(viewLifecycleOwner, Observer {
-            listBreed?.add(it)
-            if(addToDB) {
+            if(!listBreed!!.contains(it)){
+                listBreed?.add(it)
+            }
+            if(addToDB && it.catBreedInfo.isNotEmpty()) {
                 viewModel.insertDataIntoDatabase(db, it)
             }
-            if (listBreed?.size == breedNumberReturned) {
+            if (listBreed?.size == breedNumberReturned * page) {
                 viewModel.setCatInformation(listBreed!!)
                 initializeUIComponents()
             }
@@ -196,9 +199,9 @@ class CatBreedListFragment : Fragment() {
 
     @Composable
     fun BreedsScreen() {
-        var list by remember { mutableStateOf<ArrayList<CatMainInfo>?>(null) }
+        var list by remember { mutableStateOf<ArrayList<CatMainInfo>>(ArrayList()) }
         var hasResults by remember { mutableStateOf<Boolean>(true) }
-        list = listBreed
+        list = listBreed!!
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             SearchBarField(onListChanged = { searchList, searchNoResults ->
                 if(!searchList.isNullOrEmpty()) {
@@ -216,7 +219,7 @@ class CatBreedListFragment : Fragment() {
                 ) {
                     when (list) {
                         null -> {}
-                        else -> itemsIndexed(list!!) { index, item ->
+                        else -> itemsIndexed(list) { index, item ->
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
@@ -240,6 +243,15 @@ class CatBreedListFragment : Fragment() {
                                 Text(
                                     text = item.catBreedInfo[0].name!!,
                                 )
+                            }
+                        }
+                    }
+                    item {
+                        LaunchedEffect(true) {
+                            if((activity as CatBreedMainActivity).checkInternetConnection()) {
+                                page++
+                                makeAllApiCalls(false)
+                                populateListsFromApi(addToDB = true, clearList = false)
                             }
                         }
                     }
@@ -274,7 +286,13 @@ class CatBreedListFragment : Fragment() {
             checked = isFavorite,
             onCheckedChange = {
                 isFavorite = !isFavorite
+                if(isFavorite){
+                    favoritesList!!.add(listBreed!![position])
+                }else{
+                    favoritesList!!.remove(listBreed!![position])
+                }
                 listBreed!![position].favorite = isFavorite
+                viewModel.setFavoritesInformation(favoritesList!!)
                 viewModel.insertDataIntoDatabase(db, listBreed!![position])
             }
         ) {
@@ -331,6 +349,7 @@ class CatBreedListFragment : Fragment() {
                         active = false
                     }
                 }else{
+
                 }
             },
             active = active,
@@ -350,7 +369,7 @@ class CatBreedListFragment : Fragment() {
                             if(text.isNotEmpty()) {
                                 text = ""
                                 if((activity as CatBreedMainActivity).checkInternetConnection()){
-                                    populateListsFromApi(false)
+                                    populateListsFromApi(addToDB = false, clearList = true)
                                 }else{
                                     accessListInDatabase()
                                 }

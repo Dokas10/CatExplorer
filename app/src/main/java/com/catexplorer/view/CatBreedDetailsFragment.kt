@@ -28,6 +28,7 @@ import androidx.room.Room
 import coil.compose.AsyncImage
 import com.catexplorer.R
 import com.catexplorer.data.CatMainInfo
+import com.catexplorer.databinding.FragmentBreedFavoritesBinding
 import com.catexplorer.databinding.FragmentCatBreedDetailsBinding
 import com.catexplorer.utils.CatBreedDatabase
 import com.catexplorer.viewModel.CatBreedViewModel
@@ -82,11 +83,16 @@ class CatBreedDetailsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return if (::binding.isInitialized) {
-            binding.root
-        } else {
+        try {
+            binding = FragmentCatBreedDetailsBinding.inflate(
+                inflater,
+                container,
+                false
+            )
+            return binding.root
+        }catch (e : Exception){
             Toast.makeText(requireContext(), getString(R.string.generic_binding_initialization_error), Toast.LENGTH_SHORT).show()
-            super.onCreateView(inflater, container, savedInstanceState)
+            return onCreateView(inflater, container, savedInstanceState)
         }
     }
 
