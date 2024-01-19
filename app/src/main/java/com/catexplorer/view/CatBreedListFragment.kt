@@ -278,7 +278,7 @@ class CatBreedListFragment : Fragment() {
     @Composable
     fun FavoriteButton(
         modifier: Modifier = Modifier,
-        color: Color = Color.Gray,
+        color: Color = Color.Red,
         position: Int
     ) {
 
